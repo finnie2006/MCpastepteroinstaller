@@ -1,11 +1,11 @@
-# Pterodactyl Free Stuff installer
+# Pterodactyl Free Stuff installer v2.0
+*The long awaited update*
 
-
-An installer made for free Pterodactyl Panel themes & addons for Pterodactyl Panel ``V1.x.x`` this will not work on ``0.x.x``
+An installer made for free Pterodactyl Panel themes & addons for Pterodactyl Panel ``V1.11.x`` this will not work on ``0.x.x``
 
 The version number off the branch is the version that it works on on pterodactyl
 
-## Supported: 1.10.X - 1.11.X
+## Supported: 1.11.7
 
 
 
@@ -40,4 +40,4 @@ That is possible make an issue when you get approved you need to send your addon
 Or if you have request what we should add make an issue or join our Discord
 
 
-© 2023 Sigma Productions
+© 2024 Sigma Productions
