@@ -1,153 +1,69 @@
-#!/bin/bash
-
-set -e
-
-
-print_brake() {
-  for ((n = 0; n < $1; n++)); do
-    echo -n "#"
-  done
-  echo ""
-}
-
-
-hyperlink() {
-  echo -e "\e]8;;${1}\a${1}\e]8;;\a"
-}
-
-
-#### Colors ####
-
-GREEN="\e[0;92m"
-YELLOW="\033[1;33m"
-reset="\e[0m"
-
-
-#### OS check ####
-
-check_distro() {
-  if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    OS=$(echo "$ID")
-    OS_VER=$VERSION_ID
-  elif type lsb_release >/dev/null 2>&1; then
-    OS=$(lsb_release -si)
-    OS_VER=$(lsb_release -sr)
-  elif [ -f /etc/lsb-release ]; then
-    . /etc/lsb-release
-    OS=$(echo "$DISTRIB_ID")
-    OS_VER=$DISTRIB_RELEASE
-  elif [ -f /etc/debian_version ]; then
-    OS="debian"
-    OS_VER=$(cat /etc/debian_version)
-  elif [ -f /etc/SuSe-release ]; then
-    OS="SuSE"
-    OS_VER="?"
-  elif [ -f /etc/redhat-release ]; then
-    OS="Red Hat/CentOS"
-    OS_VER="?"
-  else
-    OS=$(uname -s)
-    OS_VER=$(uname -r)
-  fi
-
-  OS=$(echo "$OS")
-  OS_VER_MAJOR=$(echo "$OS_VER" | cut -d. -f1)
-}
-
-
-
-#### Install Dependencies ####
-clear
-dependencies() {
-echo
-print_brake 30
-echo -e "* ${GREEN}Installing dependencies...${reset}"
-print_brake 30
-echo
-case "$OS" in
-debian | ubuntu)
-curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - && apt-get install -y nodejs && apt-get install -y zip
-;;
-esac
-
-if [ "$OS_VER_MAJOR" == "7" ]; then
-curl -sL https://rpm.nodesource.com/setup_16.x | sudo -E bash - && sudo yum install -y nodejs yarn && sudo yum install -y zip
-fi
-
-if [ "$OS_VER_MAJOR" == "8" ]; then
-curl -sL https://rpm.nodesource.com/setup_16.x | sudo -E bash - && sudo dnf install -y nodejs && sudo dnf install -y zip
-fi
-}
-
-
-#### Panel Backup ####
-backup() {
-echo
-print_brake 32
-echo -e "* ${GREEN}Performing security backup...${reset}"
-print_brake 32
-if [ -f "/var/www/pterodactyl/PanelBackup/PanelBackup.zip" ]; then
-echo
-print_brake 45
-echo -e "* ${GREEN}There is already a backup, skipping step...${reset}"
-print_brake 45
-echo
-else
+php /var/www/pterodactyl/artisan down
 cd /var/www/pterodactyl
-mkdir -p PanelBackup
-zip -r PanelBackup.zip app config public resources routes storage database .env tailwind.config.js
-mv PanelBackup.zip PanelBackup
+DIR="/var/www/pterodactyl/backup"
+if [ -d "$DIR" ]; then
+    echo -n "$DIR' There already is a backup do you want to create a new one? y/n "
+    read answer
+
+    # if echo "$answer" | grep -iq "^y" ;then
+
+    if [ "$answer" != "${answer#[Yy]}" ]; then # this grammar (the #[] operator) means that the variable $answer where any Y or y in 1st position will be dropped if they exist.
+        echo Yes
+        rm -r backup/*
+        mkdir -p backup/{resources,public}
+        cp -r resources/* backup/resources/
+        cp -r public/* backup/public/
+        cp tailwind.config.js backup/
+        echo "Created Backup going further"
+    else
+        echo No
+    fi
+
+else
+    echo "No backup found making one"
+    mkdir -p backup/{resources,public}
+    cp -r resources/* backup/resources/
+    cp -r public/* backup/public/
+    cp tailwind.config.js backup/
+    echo "Created Backup going further"
 fi
-}
 
-
-#### Donwload Files ####
-download_files() {
-print_brake 25
-echo -e "* ${GREEN}Downloading files...${reset}"
-print_brake 25
+# Install Addon
+echo "=== Installing Addon ==="
 cd /var/www/pterodactyl/resources/scripts/components/server/console/
 rm PowerButtons.tsx
 wget https://raw.githubusercontent.com/Sigma-Production/PteroFreeStuffinstaller/V1.10.1/resources/Kill-Button/PowerButtons.tsx
-# cd /var/www/pterodactyl/resources/scripts/components/elements/
-# rm Button.tsx
-# wget https://raw.githubusercontent.com/finnie2006/PteroFreeStuffinstaller/V1.10.1/resources/Kill-Button/Button.tsx
-}
 
-#### Panel Production ####
-
-production() {
-DIR=/var/www/pterodactyl
-
-if [ -d "$DIR" ]; then
-echo
-print_brake 25
-echo -e "* ${GREEN}Producing panel...${reset}"
-print_brake 25
-npm i -g yarn
-cd /var/www/pterodactyl
-yarn install
-yarn build:production
-php artisan up
+# Install NodeJS
+echo "=== Installing NodeJS and Yarn ==="
+if [ $(which yum) ]; then
+  if ! command -v node -v &>/dev/null; then
+    curl -sL https://rpm.nodesource.com/setup_16.x | sudo bash -
+    yum install nodejs
+  fi
+elif [ $(which apt) ]; then
+  if ! command -v node -v &>/dev/null; then
+    curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+    apt-get install -y nodejs
+  fi
+else
+  echo "Your OS is unsupported"
 fi
-}
+if ! command -v yarn -v &>/dev/null; then
+  npm i -g yarn
+fi
 
+# Build Panel
+echo "=== Installing Dependencies ==="
+yarn install
 
-bye() {
-print_brake 50
-echo
-echo -e "* A backup for your panel has been created."
-echo -e "* Serperate killbutton installed"
-echo
-print_brake 50
-}
-
-
-#### Exec Script ####
-check_distro
-dependencies
-backup
-download_files
-production
-bye
+echo "=== Building Panel ==="
+echo "--- WARNING: MAY TAKE SOME TIME ---"
+echo "--- ON SOME SYSTEMS, BE PATIENT ---"
+yarn build:production
+#clear
+chown -R www-data:www-data /var/www/pterodactyl/*
+php /var/www/pterodactyl/artisan view:clear
+php /var/www/pterodactyl/artisan config:clear
+php /var/www/pterodactyl/artisan up
+echo "Kill Button Addon added"

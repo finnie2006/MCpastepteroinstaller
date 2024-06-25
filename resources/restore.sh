@@ -36,6 +36,7 @@ read answer
     exit
   else
       echo No
+      php /var/www/pterodactyl/artisan up
   fi
 else
    echo "There is no backup nothing to restore from!"

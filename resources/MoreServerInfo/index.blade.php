@@ -48,6 +48,7 @@
                             <th>Disk</th>
                             <th>Connection</th>
                             <th></th>
+                            <th></th>
                         </tr>
                         @foreach ($servers as $server)
                             <tr data-server="{{ $server->uuidShort }}">
@@ -69,6 +70,10 @@
                                     @else
                                         <span class="label label-success">Active</span>
                                     @endif
+                                </td>
+                                <td class="text-center">
+                                    <a class="btn btn-xs btn-default" href="/server/{{ $server->uuidShort }}"><i class="fa fa-wrench"></i></a>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

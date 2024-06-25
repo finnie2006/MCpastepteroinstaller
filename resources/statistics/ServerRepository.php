@@ -77,7 +77,7 @@ class ServerRepository extends EloquentRepository implements ServerRepositoryInt
             return $this->getBuilder()->with('egg.variables', 'variables')
                 ->where($this->getModel()->getKeyName(), '=', $id)
                 ->firstOrFail($this->getColumns());
-            } catch (ModelNotFoundException) {
+        } catch (ModelNotFoundException) {
             throw new RecordNotFoundException();
         }
     }

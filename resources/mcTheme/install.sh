@@ -1,4 +1,3 @@
-
 php /var/www/pterodactyl/artisan down
 cd /var/www/pterodactyl
 DIR="/var/www/pterodactyl/backup"

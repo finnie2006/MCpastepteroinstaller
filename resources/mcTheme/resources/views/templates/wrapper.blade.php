@@ -40,7 +40,7 @@
 
         @include('layouts.scripts')
     </head>
-    <body class="bg-theme-main">
+    <body class="{{ $css['body'] ?? 'bg-theme-main' }}">
         @section('content')
             @yield('above-container')
             @yield('container')
