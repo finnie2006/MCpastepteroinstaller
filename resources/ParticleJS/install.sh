@@ -28,7 +28,7 @@ else
    echo "Created Backup going furthur"
 fi
 
-sudo curl https://raw.githubusercontent.com/Sigma-Production/PteroFreeStuffinstaller/V1.10.1/resources/ParticleJS/ParticleJS.tar.gz | sudo tar -xz
+sudo curl https://raw.githubusercontent.com/Sigma-Production/PteroFreeStuffinstaller/V1.10.1/resources/ParticleJS/ParticleJS_fixed.tar.gz | sudo tar -xz
 #clear
 cd /var/www/pterodactyl
 
